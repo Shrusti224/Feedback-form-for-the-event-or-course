@@ -18,13 +18,20 @@ export const calculateFormSummary = (form, responses) => {
       };
     }
 
-    if (question.type === "mcq") {
+    if (question.type === "mcq" || question.type === "multi") {
       const distribution = (question.options || []).reduce((acc, option) => {
         acc[option] = 0;
         return acc;
       }, {});
 
       answers.forEach((value) => {
+        if (Array.isArray(value)) {
+          value.forEach((selected) => {
+            const key = String(selected);
+            distribution[key] = (distribution[key] || 0) + 1;
+          });
+          return;
+        }
         const key = String(value);
         distribution[key] = (distribution[key] || 0) + 1;
       });
@@ -63,6 +70,7 @@ export const calculateFormSummary = (form, responses) => {
       id: r._id,
       submittedAt: r.createdAt,
       userType: r.userType,
+      respondentEmail: r.respondentEmail || "",
     })),
   };
 };

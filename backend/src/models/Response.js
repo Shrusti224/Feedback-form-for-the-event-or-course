@@ -5,7 +5,7 @@ const answerSchema = new mongoose.Schema(
     questionIndex: { type: Number, required: true },
     questionType: {
       type: String,
-      enum: ["text", "rating", "mcq"],
+      enum: ["text", "rating", "mcq", "multi"],
       required: true,
     },
     value: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -24,8 +24,14 @@ const responseSchema = new mongoose.Schema(
     answers: { type: [answerSchema], required: true },
     userType: {
       type: String,
-      enum: ["anonymous", "logged-in"],
+      enum: ["anonymous", "email", "logged-in"],
       default: "anonymous",
+    },
+    respondentEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
     },
   },
   { timestamps: true }

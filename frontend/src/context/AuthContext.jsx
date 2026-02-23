@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react";
-import { loginAdmin as loginApi } from "../api/services";
+import { loginAdmin as loginApi, signupAdmin as signupApi } from "../api/services";
 
 const AuthContext = createContext(null);
 
@@ -18,6 +18,14 @@ export const AuthProvider = ({ children }) => {
     setAdmin(data.admin);
   };
 
+  const signup = async (email, password) => {
+    const data = await signupApi({ email, password });
+    localStorage.setItem("adminToken", data.token);
+    localStorage.setItem("adminUser", JSON.stringify(data.admin));
+    setToken(data.token);
+    setAdmin(data.admin);
+  };
+
   const logout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
@@ -26,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = useMemo(
-    () => ({ token, admin, isAuthenticated: Boolean(token), login, logout }),
+    () => ({ token, admin, isAuthenticated: Boolean(token), login, signup, logout }),
     [token, admin]
   );
 

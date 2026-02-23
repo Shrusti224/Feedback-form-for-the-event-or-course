@@ -2,6 +2,8 @@ import { Form } from "../models/Form.js";
 import { Response } from "../models/Response.js";
 import { calculateFormSummary } from "../utils/analytics.js";
 
+const isOwner = (form, adminId) => String(form.owner) === String(adminId);
+
 export const createForm = async (req, res, next) => {
   try {
     const { title, description, questions, isActive } = req.body;
@@ -9,7 +11,13 @@ export const createForm = async (req, res, next) => {
       return res.status(400).json({ message: "Title and at least one question are required" });
     }
 
-    const form = await Form.create({ title, description, questions, isActive });
+    const form = await Form.create({
+      owner: req.user.adminId,
+      title,
+      description,
+      questions,
+      isActive,
+    });
     return res.status(201).json(form);
   } catch (error) {
     return next(error);
@@ -18,7 +26,7 @@ export const createForm = async (req, res, next) => {
 
 export const getForms = async (req, res, next) => {
   try {
-    const forms = await Form.find().sort({ createdAt: -1 });
+    const forms = await Form.find({ owner: req.user.adminId }).sort({ createdAt: -1 });
     return res.json(forms);
   } catch (error) {
     return next(error);
@@ -43,6 +51,9 @@ export const updateForm = async (req, res, next) => {
     const form = await Form.findById(req.params.id);
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
+    }
+    if (!isOwner(form, req.user.adminId)) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     form.title = title ?? form.title;
@@ -69,10 +80,16 @@ export const updateFormStatus = async (req, res, next) => {
       return res.status(400).json({ message: "isActive boolean is required" });
     }
 
-    const form = await Form.findByIdAndUpdate(req.params.id, { isActive }, { new: true });
+    const form = await Form.findById(req.params.id);
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
     }
+    if (!isOwner(form, req.user.adminId)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    form.isActive = isActive;
+    await form.save();
 
     return res.json(form);
   } catch (error) {
@@ -82,10 +99,15 @@ export const updateFormStatus = async (req, res, next) => {
 
 export const deleteForm = async (req, res, next) => {
   try {
-    const form = await Form.findByIdAndDelete(req.params.id);
+    const form = await Form.findById(req.params.id);
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
     }
+    if (!isOwner(form, req.user.adminId)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await Form.findByIdAndDelete(req.params.id);
     await Response.deleteMany({ formId: req.params.id });
     return res.json({ message: "Form deleted successfully" });
   } catch (error) {
@@ -98,6 +120,9 @@ export const getFormSummary = async (req, res, next) => {
     const form = await Form.findById(req.params.id).lean();
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
+    }
+    if (!isOwner(form, req.user.adminId)) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     const responses = await Response.find({ formId: req.params.id }).sort({ createdAt: -1 }).lean();

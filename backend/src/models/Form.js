@@ -4,7 +4,7 @@ const questionSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["text", "rating", "mcq"],
+      enum: ["text", "rating", "mcq", "multi"],
       required: true,
     },
     label: { type: String, required: true, trim: true },
@@ -16,6 +16,12 @@ const questionSchema = new mongoose.Schema(
 
 const formSchema = new mongoose.Schema(
   {
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: true,
+      index: true,
+    },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     questions: {

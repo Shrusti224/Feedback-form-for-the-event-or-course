@@ -20,24 +20,24 @@ const ReportPanel = ({ summary }) => {
     .filter((q) => q.type === "rating")
     .map((q) => ({ name: q.label.slice(0, 20), average: q.average }));
 
-  const mcqQuestion = summary.questionAnalytics.find((q) => q.type === "mcq");
+  const mcqQuestion = summary.questionAnalytics.find((q) => q.type === "mcq" || q.type === "multi");
   const mcqData = mcqQuestion
     ? Object.entries(mcqQuestion.distribution).map(([name, value]) => ({ name, value }))
     : [];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-semibold">Summary Report</h2>
+    <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
+      <h2 className="text-lg font-semibold tracking-tight text-slate-900">Summary Report</h2>
       <p className="mt-1 text-sm text-slate-600">Total Responses: {summary.totalResponses}</p>
 
       {summary.lowestRatedQuestion && (
-        <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
           Lowest rated question: {summary.lowestRatedQuestion.label} ({summary.lowestRatedQuestion.average}/5)
         </p>
       )}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="h-64 rounded-md border border-slate-100 p-2">
+        <div className="h-64 rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
           <h3 className="mb-2 text-sm font-medium">Average Rating per Question</h3>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={ratingData}>
@@ -50,8 +50,8 @@ const ReportPanel = ({ summary }) => {
           </ResponsiveContainer>
         </div>
 
-        <div className="h-64 rounded-md border border-slate-100 p-2">
-          <h3 className="mb-2 text-sm font-medium">Multiple Choice Distribution</h3>
+        <div className="h-64 rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+          <h3 className="mb-2 text-sm font-medium">Choice Distribution</h3>
           {mcqData.length ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -73,8 +73,9 @@ const ReportPanel = ({ summary }) => {
         <h3 className="text-sm font-medium">Recent Submissions</h3>
         <ul className="mt-2 space-y-2 text-sm text-slate-600">
           {summary.recentSubmissions.map((item) => (
-            <li key={item.id} className="rounded-md bg-slate-50 px-3 py-2">
+            <li key={item.id} className="rounded-md border border-slate-200 bg-white px-3 py-2">
               {new Date(item.submittedAt).toLocaleString()} | {item.userType}
+              {item.respondentEmail ? ` | ${item.respondentEmail}` : ""}
             </li>
           ))}
         </ul>

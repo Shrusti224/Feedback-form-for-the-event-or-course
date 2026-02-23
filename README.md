@@ -67,6 +67,7 @@ attempt1/
 
 ## Features
 - JWT-based secure admin login
+- Admin signup (multi-user)
 - Create/edit/delete forms
 - Activate/deactivate form status
 - Dynamic questions: text, rating (1-5), multiple choice
@@ -122,6 +123,7 @@ Example defaults in `.env.example`:
 
 ## API Endpoints
 ### Auth
+- `POST /api/admin/signup`
 - `POST /api/admin/login`
 
 ### Forms
@@ -142,3 +144,4 @@ Example defaults in `.env.example`:
 - Ensure MongoDB is running locally or update `MONGODB_URI`.
 - Keep JWT and DB credentials in environment variables.
 - For production, configure strict CORS and secure secrets.
+- Forms and response reports are isolated per signed-in account.

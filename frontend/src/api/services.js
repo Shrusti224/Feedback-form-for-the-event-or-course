@@ -1,5 +1,10 @@
 import api from "./client";
 
+export const signupAdmin = async (payload) => {
+  const { data } = await api.post("/admin/signup", payload);
+  return data;
+};
+
 export const loginAdmin = async (payload) => {
   const { data } = await api.post("/admin/login", payload);
   return data;

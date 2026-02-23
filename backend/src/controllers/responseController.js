@@ -5,13 +5,14 @@ import { Response } from "../models/Response.js";
 const normalizeAnswers = (form, answers) => {
   return form.questions.map((q, index) => {
     const match = answers.find((item) => item.questionIndex === index);
-    return match ? match.value : "";
+    if (!match) return "";
+    return Array.isArray(match.value) ? match.value.join(" | ") : match.value;
   });
 };
 
 export const createResponse = async (req, res, next) => {
   try {
-    const { answers, userType } = req.body;
+    const { answers, userType, respondentEmail } = req.body;
     const form = await Form.findById(req.params.formId);
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
@@ -23,10 +24,23 @@ export const createResponse = async (req, res, next) => {
       return res.status(400).json({ message: "answers must be an array" });
     }
 
+    const resolvedUserType = userType === "email" ? "email" : "anonymous";
+    const normalizedEmail = String(respondentEmail || "")
+      .trim()
+      .toLowerCase();
+
+    if (resolvedUserType === "email") {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!normalizedEmail || !emailPattern.test(normalizedEmail)) {
+        return res.status(400).json({ message: "Valid email is required for email submissions" });
+      }
+    }
+
     const response = await Response.create({
       formId: req.params.formId,
       answers,
-      userType: userType || "anonymous",
+      userType: resolvedUserType,
+      respondentEmail: resolvedUserType === "email" ? normalizedEmail : "",
     });
 
     return res.status(201).json(response);
@@ -41,6 +55,9 @@ export const getResponsesByForm = async (req, res, next) => {
     if (!form) {
       return res.status(404).json({ message: "Form not found" });
     }
+    if (String(form.owner) !== String(req.user.adminId)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
 
     const page = Number(req.query.page) > 0 ? Number(req.query.page) : 1;
     const limit = Number(req.query.limit) > 0 ? Number(req.query.limit) : 10;
@@ -52,8 +69,8 @@ export const getResponsesByForm = async (req, res, next) => {
     ]);
 
     if (req.query.format === "csv") {
-      const columns = ["submittedAt", "userType", ...form.questions.map((q, index) => `Q${index + 1}:${q.label}`)];
-      const records = items.map((r) => [r.createdAt, r.userType, ...normalizeAnswers(form, r.answers)]);
+      const columns = ["submittedAt", "userType", "respondentEmail", ...form.questions.map((q, index) => `Q${index + 1}:${q.label}`)];
+      const records = items.map((r) => [r.createdAt, r.userType, r.respondentEmail || "", ...normalizeAnswers(form, r.answers)]);
       const csv = stringify([columns, ...records]);
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", `attachment; filename=form-${req.params.formId}-responses.csv`);
