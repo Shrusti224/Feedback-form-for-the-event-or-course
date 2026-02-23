@@ -21,8 +21,9 @@ services:
       - key: CLIENT_URL
         sync: false
 
-  - type: static
+  - type: web
     name: smart-feedback-frontend
+    env: static
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
