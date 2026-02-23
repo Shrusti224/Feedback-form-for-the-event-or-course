@@ -2,7 +2,6 @@ services:
   - type: web
     name: smart-feedback-backend
     env: node
-    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
@@ -24,7 +23,6 @@ services:
   - type: web
     name: smart-feedback-frontend
     env: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
